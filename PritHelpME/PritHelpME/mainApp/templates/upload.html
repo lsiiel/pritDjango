@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Загрузка и обработка изображения</title>
+</head>
+<body>
+    <h1>Загрузка и обработка изображения</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required><br>
+        <label for="line_color">Цвет линий (BGR):</label>
+        <input type="text" name="line_color" value="0,0,255" required><br>
+        <label for="line_thickness">Толщина линий:</label>
+        <input type="number" name="line_thickness" value="2" required><br>
+        <button type="submit">Загрузить</button>
+    </form>
+    <h2>Обработанное изображение:</h2>
+    <img id="resultImage" src="" alt="Processed Image" width="600" height="600">
+    <br>
+    <button id="downloadPngButton" style="display: none;">Скачать PNG</button>
+    <button id="downloadDxfButton" style="display: none;">Скачать DXF</button>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/myapp/process-image/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image) {
+                    document.getElementById('resultImage').src = 'data:image/png;base64,' + data.image;
+                    document.getElementById('downloadPngButton').style.display = 'block';
+                    document.getElementById('downloadDxfButton').style.display = 'block';
+
+                    document.getElementById('downloadPngButton').addEventListener('click', function() {
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = 'data:image/png;base64,' + data.image;
+                        downloadLink.download = 'processed_image.png';
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    });
+
+                    document.getElementById('downloadDxfButton').addEventListener('click', function() {
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = 'data:application/dxf;base64,' + data.dxf;
+                        downloadLink.download = 'processed_image.dxf';
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    });
+                } else if (data.error) {
+                    console.error('Ошибка:', data.error);
+                    alert('Ошибка: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Ошибка: ' + error);
+            });
+        });
+    </script>
+</body>
+</html>
