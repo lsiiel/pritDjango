@@ -3,24 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <title>Загрузка и обработка изображения</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'mainApp/css/upload.css' %}">
+
 </head>
 <body>
-    <h1>Загрузка и обработка изображения</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="image" accept="image/*" required><br>
-        <label for="line_color">Цвет линий (BGR):</label>
-        <input type="text" name="line_color" value="0,0,255" required><br>
-        <label for="line_thickness">Толщина линий:</label>
-        <input type="number" name="line_thickness" value="2" required><br>
-        <button type="submit">Загрузить</button>
-    </form>
-    <h2>Обработанное изображение:</h2>
-    <img id="resultImage" src="" alt="Processed Image" width="600" height="600">
-    <br>
-    <button id="downloadPngButton" style="display: none;">Скачать PNG</button>
-    <button id="downloadDxfButton" style="display: none;">Скачать DXF</button>
+    <section class="background-section">
+        <div class="header">
+			<div class="header-logo">
+				{% load static %}
+				<img src="{% static 'mainApp/images/logoNew.png' %}" alt="" width="50px" height="50px">
+			</div>
+            <div class="header-links">
+				<a href="{% url 'mainPage' %}">Вернуться на главную страницу</a>
+			</div>
+        </div>
+        <div class="flex">
+            <div class="">
+            <h1>Расчет площади объекта</h1>
+        <form id="areaForm" class="uploadForm">
+            {% csrf_token %}
+            <div class="input-wrapper mt">
+                <label for="length1">Длина первого объекта (м):</label>
+                <input type="number" class="jesusI" name="length1" id="length1" min="0" max="10000" step="0.01" required>
+            </div>
+            <div class="input-wrapper mt">
+                <label for="width1">Ширина первого объекта (м):</label>
+                <input type="number" class="jesusI" name="width1" id="width1" min="0" max="10000"  step="0.01" required>
+            </div>
+            <div class="input-wrapper mt">
+                <label for="material_length">Длина материала (см):</label>
+                <input type="number" class="jesusI" name="material_length" id="material_length" min="0" max="10000"  step="0.1" required>
+            </div>
+            <div class="input-wrapper mt">
+                <label for="material_width">Ширина материала (см):</label>
+                <input type="number" class="jesusI" name="material_width" id="material_width" min="0" max="10000"  step="0.1" required>
+            </div>
+            <div class="input-wrapper mt">
+                <input type="checkbox" class="jesusI check" name="has_subtract_object" id="has_subtract_object">
+                <label class="tac" for="has_subtract_object">Есть объект, площадь которого нужно вырезать</label>
+            </div>
+            <div id="subtractFields" class="hidden">
+                <div class="input-wrapper mt">
+                    <label for="length2">Длина второго объекта (м):</label>
+                    <input type="number" class="jesusI" name="length2" min="0" max="10000"  id="length2" step="0.01">
+                </div>
+                <div class="input-wrapper mt">
+                    <label for="width2">Ширина второго объекта (м):</label>
+                    <input type="number" class="jesusI" name="width2" min="0" max="10000"  id="width2" step="0.01">
+                </div>
+            </div>
+            <input type="submit" id="sub2" hidden/>
+            <label class="jesus mt" for="sub2">Начать обработку</label>
+            <div id="calculationResult" class="hidden i-mt">
+                <h2>Результаты расчета</h2>
+                <p>Площадь первого объекта: <span id="area1"></span> м²</p>
+                <p>Площадь второго объекта: <span id="subtracted_area"></span> м²</p>
+                <p>Итоговая площадь: <span id="final_area"></span> м²</p>
+                <p>Площадь одного материала: <span id="material_area"></span> м²</p>
+                <p>Необходимое количество материалов: <span id="num_materials"></span></p>
+            </div>
+        </form>
+        </div>
+        <div class="">
+            <div id="result" style="display: none;">
+                <h2 style="font-weight: bold;">Обработанное изображение</h2>
+                <img id="resultImage" class="mt" src="" alt="Processed Image" width="500" height="500">
+                <div class="flex">
+                    <button id="downloadPngButton" class="jesus"  style="display: none;">Скачать PNG</button>
+                    <button id="downloadDxfButton" class="jesus" style="display: none;">Скачать DXF</button>
+                </div>
+            </div>
+        </div>
+        <div class="flex">
+            <div class="">
+            <h1 id="title">Загрузка и обработка изображения</h1>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <input type="file" name="image" id="file" accept="image/*" required hidden/>
+                <label class="jesus" for="file">Нажмите чтобы загрузить изображение</label>
+                <div class="i-mt">
+                    <div class="input-wrapper">
+                        <label for="line_color">Цвет линий</label>
+                        <input type="text" name="line_color" class="jesusI" value="0,0,255" placeholder="Введите цвет линий. По умолчанию красный." required>
+                    </div>
+                    <div class="input-wrapper">
+                        <label class="mt" for="line_thickness">Толщина линий</label>
+                        <input type="number" name="line_thickness" class="jesusI" placeholder="Введите толщину линий">
+                    </div>
+                </div>
+                <input type="submit" id="sub" hidden/>
+                <label class="jesus mt" for="sub">Начать обработку</label>
+            </form>
+        </div>
+        </div>
+        </div>
+    </section>
+    <section class="calculate-section">
+        
+    </section>
 
     <script>
+        document.getElementById('has_subtract_object').addEventListener('change', function() {
+            var subtractFields = document.getElementById('subtractFields');
+            subtractFields.classList.toggle('hidden', !this.checked);
+        });
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(this);
@@ -35,6 +121,8 @@
                     document.getElementById('resultImage').src = 'data:image/png;base64,' + data.image;
                     document.getElementById('downloadPngButton').style.display = 'block';
                     document.getElementById('downloadDxfButton').style.display = 'block';
+                    document.getElementById('result').style.display = 'block';
+                    
 
                     document.getElementById('downloadPngButton').addEventListener('click', function() {
                         const downloadLink = document.createElement('a');
@@ -56,6 +144,46 @@
                 } else if (data.error) {
                     console.error('Ошибка:', data.error);
                     alert('Ошибка: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Ошибка: ' + error);
+            });
+        });
+
+        document.getElementById('areaForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(this);
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch('{% url "calculate_area" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Ошибка: ' + data.error);
+                } else {
+                    document.getElementById('area1').textContent = data.area1;
+                    const subtractedAreaElement = document.getElementById('subtracted_area');
+                    if (data.subtracted_area) {
+                        subtractedAreaElement.parentNode.style.display = 'block';
+                        subtractedAreaElement.textContent = data.subtracted_area;
+                    } else {
+                        subtractedAreaElement.parentNode.style.display = 'none';
+                    }
+                    document.getElementById('final_area').textContent = data.final_area;
+                    document.getElementById('material_area').textContent = data.material_area;
+                    document.getElementById('num_materials').textContent = data.num_materials;
+
+                    document.getElementById('calculationResult').classList.remove('hidden');
                 }
             })
             .catch(error => {
